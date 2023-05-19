@@ -1,5 +1,7 @@
 # General config
 
+WORKING_DIR := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
+
 C        := gcc
 CFLAGS   := -Wall -Wextra -std=c11
 LDFLAGS  := -Llib
@@ -19,7 +21,7 @@ SOURCE_DIR  := src
 INCLUDE_DIR := include
 COMPILE_DIR := build
 
-TARGET             := remote-wrapper
+TARGET := remote-wrapper
 
 SRC := $(shell find $(SOURCE_DIR) $(INCLUDE_DIR) -type f -iname "*.c")
 HDR := $(shell find $(SOURCE_DIR) $(INCLUDE_DIR) -type f -iname "*.h")
