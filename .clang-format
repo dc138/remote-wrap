@@ -1,0 +1,14 @@
+BasedOnStyle: Google
+NamespaceIndentation: All
+ColumnLimit: 120
+SpaceBeforeCpp11BracedList: true
+FixNamespaceComments: false
+IndentPPDirectives: AfterHash
+PointerAlignment: Left
+AlignConsecutiveDeclarations: true
+BinPackParameters: false
+BinPackArguments: false
+AllowAllParametersOfDeclarationOnNextLine: false
+AlignConsecutiveAssignments: true
+SortIncludes: false
+AllowShortFunctionsOnASingleLine: false
