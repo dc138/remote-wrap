@@ -21,7 +21,8 @@ COMPILE_DIR := build
 
 TARGET             := remote-wrapper
 
-SRC             := $(shell find $(SOURCE_DIR) $(INCLUDE_DIR) -type f -iname "*.c")
+SRC := $(shell find $(SOURCE_DIR) $(INCLUDE_DIR) -type f -iname "*.c")
+HDR := $(shell find $(SOURCE_DIR) $(INCLUDE_DIR) -type f -iname "*.h")
 
 D_BUILD_DIR   := $(COMPILE_DIR)/debug
 D_OBJECT_DIR  := $(D_BUILD_DIR)
@@ -38,13 +39,13 @@ all: release
 
 # Compilation
 
-$(D_OBJECT_DIR)/%.o: %.c
+$(D_OBJECT_DIR)/%.o: %.c $(HDR)
 	@if [ ! -d "$(dir $@)" ]; then mkdir -p $(dir $@) \
 	  && printf "[\033[34mMKDIR\033[0m] $(dir $@)\n"; fi
 	@$(C) $(CFLAGS) $(D_CFLAGS) -I$(INCLUDE_DIR) -c $< -o $@ \
 	  && printf "[\033[32mC\033[0m] \033[1m$^\033[0m -> \033[1m$@\033[0m\n"
 
-$(R_OBJECT_DIR)/%.o: %.c
+$(R_OBJECT_DIR)/%.o: %.c $(HDR)
 	@if [ ! -d "$(dir $@)" ]; then mkdir -p $(dir $@) \
 	  && printf "[\033[34mMKDIR\033[0m] $(dir $@)\n"; fi
 	@$(C) $(CFLAGS) $(R_CFLAGS) -I$(INCLUDE_DIR) -c $< -o $@ \
