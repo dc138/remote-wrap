@@ -15,6 +15,8 @@ GDBFLAGS :=
 VALGRIND      := valgrind
 VALGRINDFLAGS := --leak-check=full --track-origins=yes -s --error-exitcode=1
 
+STRIP := strip
+
 RUNFLAGS :=
 
 SOURCE_DIR  := src
@@ -23,7 +25,10 @@ COMPILE_DIR := build
 
 TARGET := remote-wrapper
 
-SRC := $(shell find $(SOURCE_DIR) $(INCLUDE_DIR) -type f -iname "*.c")
+MAIN_DEFS := $(SOURCE_DIR)/wrapper.c $(SOURCE_DIR)/encrypt.c
+MAIN_USED := wrapper
+
+SRC := $(filter-out $(MAIN_DEFS),$(shell find $(SOURCE_DIR) $(INCLUDE_DIR) -type f -iname "*.c")) $(SOURCE_DIR)/$(MAIN_USED).c
 HDR := $(shell find $(SOURCE_DIR) $(INCLUDE_DIR) -type f -iname "*.h")
 
 D_BUILD_DIR   := $(COMPILE_DIR)/debug
@@ -45,13 +50,13 @@ $(D_OBJECT_DIR)/%.o: %.c $(HDR)
 	@if [ ! -d "$(dir $@)" ]; then mkdir -p $(dir $@) \
 	  && printf "[\033[34mMKDIR\033[0m] $(dir $@)\n"; fi
 	@$(C) $(CFLAGS) $(D_CFLAGS) -I$(INCLUDE_DIR) -c $< -o $@ \
-	  && printf "[\033[32mC\033[0m] \033[1m$^\033[0m -> \033[1m$@\033[0m\n"
+	  && printf "[\033[32mC\033[0m] \033[1m$<\033[0m -> \033[1m$@\033[0m\n"
 
 $(R_OBJECT_DIR)/%.o: %.c $(HDR)
 	@if [ ! -d "$(dir $@)" ]; then mkdir -p $(dir $@) \
 	  && printf "[\033[34mMKDIR\033[0m] $(dir $@)\n"; fi
 	@$(C) $(CFLAGS) $(R_CFLAGS) -I$(INCLUDE_DIR) -c $< -o $@ \
-	  && printf "[\033[32mC\033[0m] \033[1m$^\033[0m -> \033[1m$@\033[0m\n"
+	  && printf "[\033[32mC\033[0m] \033[1m$<\033[0m -> \033[1m$@\033[0m\n"
 
 # Linking targets
 
@@ -66,6 +71,8 @@ $(R_BINARY_DIR)/$(TARGET): $(R_OBJECTS)
 	  && printf "[\033[34mMKDIR\033[0m] $(dir $@)\n"; fi
 	@$(C) $(CFLAGS) $(R_CFLAGS) -o $(R_BINARY_DIR)/$(TARGET) $^ $(LDFLAGS) \
 	  && printf "[\033[32mLD\033[0m] \033[1m$^\033[0m -> \033[1m$@\033[0m\n"
+	@$(STRIP) $@ \
+	  && printf "[\033[32mSTRIP\033[0m] \033[1m$@\033[0m\n"
 
 # Running targets
 
