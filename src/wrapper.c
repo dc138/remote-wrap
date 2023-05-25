@@ -72,7 +72,7 @@ int main(int argc, char* argv[]) {
   }
 
   int download_fd    = download_to_fd(argv[1]);
-  int decrypted_file = crypto_fd(download_fd, 0, 0);
+  int decrypted_file = crypto_fd(download_fd, false);
 
   /*char* download_path  = fd_to_path(download_fd);
   char* running_argv[] = {download_path, NULL};

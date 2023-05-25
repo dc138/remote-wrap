@@ -9,6 +9,6 @@ char* fd_to_path(int fd);
 
 int create_mem_fd(void);
 
-int crypto_fd(int in_fd, EVP_CIPHER const* cipher, bool encrypt);
+int crypto_fd(int in_fd, bool encrypt);
 
 #endif
