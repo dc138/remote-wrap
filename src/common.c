@@ -9,13 +9,13 @@
 
 char* fd_to_path(int fd) {
   char* ret = NULL;
-  EXPECT_NOT(asprintf(&ret, "/proc/self/fd/%d", fd), -1, "[!] Cannot allocate string");
+  ERROR_IF(asprintf(&ret, "/proc/self/fd/%d", fd) == -1, "[!] Cannot allocate string");
   return ret;
 }
 
 int create_mem_fd(void) {
   int out_fd = memfd_create("prog", 0);
-  EXPECT_NOT(out_fd, -1, "[!] Cannot create memory file");
+  PERROR_IF(out_fd == -1, "[!] Cannot create memory file");
   return out_fd;
 }
 
