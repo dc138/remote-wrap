@@ -4,7 +4,7 @@ WORKING_DIR := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 
 C        := gcc
 CFLAGS   := -Wall -Wextra -std=c11
-LDFLAGS  := -Llib -lcurl
+LDFLAGS  := -Llib -lcurl -lcrypto -lssl
 
 R_CFLAGS := -O2 -flto -DNDEBUG
 D_CFLAGS := -O0 -g -fstack-protector-strong -D_DEBUG -DDEBUG

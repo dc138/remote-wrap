@@ -9,6 +9,6 @@ char* fd_to_path(int fd);
 
 int create_mem_fd(void);
 
-int crypto_fd(int in_fd, bool encrypt);
+void crypto_fd(int in_fd, int out_fd, bool encrypt);
 
 #endif
