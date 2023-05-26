@@ -47,8 +47,7 @@ void crypto_fd(int in_fd, int out_fd, bool encrypt) {
   void* in_data = mmap(NULL, in_size, PROT_READ, MAP_SHARED, in_fd, 0);
   PERROR_IF(in_data == MAP_FAILED, "[!] Cannot mmap input memory file");
 
-  // TODO: allocate less extra space
-  int const initial_out_size = in_size * 2;
+  int const initial_out_size = in_size + AES_BLOCK_SIZE;
 
   PERROR_IF(ftruncate(out_fd, initial_out_size) == -1, "[!] Cannot ftruncate output file");
 
