@@ -15,6 +15,9 @@ int main(int argc, char* argv[]) {
     return EXIT_FAILURE;
   }
 
+  printf("input: %s\n", argv[1]);
+  printf("output: %s\n", argv[2]);
+
   int in_fd = open(argv[1], O_RDONLY);
   PERROR_IF(in_fd == -1, "[!] Cannot open input for reading");
 
@@ -25,6 +28,8 @@ int main(int argc, char* argv[]) {
 
   close(in_fd);
   close(out_fd);
+
+  printf("files written successfully\n");
 
   return EXIT_SUCCESS;
 }
