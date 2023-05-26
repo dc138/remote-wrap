@@ -67,17 +67,17 @@ void crypto_fd(int in_fd, int out_fd, bool encrypt) {
 
   ERROR_IF(EVP_CipherInit_ex2(ctx, NULL, crypto_key, crypto_iv, encrypt, NULL) == 0, "[!] Cannot set cipher values");
 
-  int partial_out_size = 0, out_size = 0;
+  int out_size = 0, first_pass_out_size = 0;
 
-  ERROR_IF(EVP_CipherUpdate(ctx, out_data, &partial_out_size, in_data, in_size) == 0,
+  ERROR_IF(EVP_CipherUpdate(ctx, out_data, &first_pass_out_size, in_data, in_size) == 0,
            "[!] Cannot run cipher update: %s",
            ERR_error_string(ERR_get_error(), NULL));
 
-  ERROR_IF(EVP_CipherFinal_ex(ctx, out_data, &out_size) == 0,
+  ERROR_IF(EVP_CipherFinal_ex(ctx, out_data + first_pass_out_size, &out_size) == 0,
            "[!] Cannot run cipher final: %s",
            ERR_error_string(ERR_get_error(), NULL));
 
-  out_size += partial_out_size;
+  out_size += first_pass_out_size;
 
   EVP_CIPHER_CTX_cleanup(ctx);
 

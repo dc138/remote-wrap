@@ -23,10 +23,10 @@ SOURCE_DIR  := src
 INCLUDE_DIR := include
 COMPILE_DIR := build
 
-TARGET := remote-wrapper
-
 MAIN_DEFS := $(SOURCE_DIR)/wrapper.c $(SOURCE_DIR)/encrypt.c
 MAIN_USED := wrapper
+
+TARGET := remote-$(MAIN_USED)
 
 SRC := $(filter-out $(MAIN_DEFS),$(shell find $(SOURCE_DIR) $(INCLUDE_DIR) -type f -iname "*.c")) $(SOURCE_DIR)/$(MAIN_USED).c
 HDR := $(shell find $(SOURCE_DIR) $(INCLUDE_DIR) -type f -iname "*.h")
